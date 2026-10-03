@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Galería de Gatos</title>
+<style>
+body{
+font-family: Arial;
+background:#E6D9F2;
+text-align:center;
+margin:0;
+}
+
+h1{
+background:#B8A3D6;
+color:white;
+padding:20px;
+margin:0;
+}
+
+.controles{
+margin:20px auto;
+max-width:600px;
+display:flex;
+gap:10px;
+justify-content:center;
+align-items:center;
+}
+
+#filtro{
+flex:1;
+max-width:400px;
+padding:12px;
+border:2px solid #D4C4E8;
+border-radius:8px;
+background:white;
+font-size:14px;
+}
+
+#filtro:focus{
+outline:none;
+border-color:#B8A3D6;
+}
+
+#cargarMas{
+padding:12px 20px;
+cursor:pointer;
+border:none;
+background:#9B7EBD;
+color:white;
+border-radius:8px;
+font-weight:bold;
+transition: transform .3s, background .3s;
+}
+
+#cargarMas:hover{
+background:#7B5FA0;
+transform: scale(1.05);
+}
+
+.formulario{
+margin:20px auto;
+max-width:600px;
+background:#F3EBFF;
+padding:20px;
+border-radius:15px;
+box-shadow:0 0 15px rgba(138,99,186,0.2);
+}
+
+.formulario h2{
+color:#7B5FA0;
+margin-top:0;
+}
+
+input{
+padding:10px;
+margin:5px;
+border:2px solid #D4C4E8;
+border-radius:8px;
+background:white;
+}
+
+input:focus{
+outline:none;
+border-color:#B8A3D6;
+}
+
+button{
+padding:10px 15px;
+cursor:pointer;
+border:none;
+background:#9B7EBD;
+color:white;
+border-radius:8px;
+margin:5px;
+
+transition: transform .3s, background .3s;
+}
+
+button:hover{
+background:#7B5FA0;
+transform: scale(1.05);
+}
+
+#contenedorGatos{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:20px;
+padding:20px;
+}
+
+.tarjeta{
+background:#FFFFFF;
+width:220px;
+border-radius:15px;
+box-shadow:0 0 15px rgba(138,99,186,0.2);
+padding:10px;
+border:2px solid #E6D9F2;
+
+transition: transform .3s;
+animation: aparecer .6s ease;
+}
+
+.tarjeta:hover{
+transform: scale(1.05);
+background:#F9F5FF;
+}
+
+.tarjeta img{
+width:100%;
+border-radius:10px;
+}
+
+.botones{
+margin-top:10px;
+}
+
+.botones button{
+margin:3px;
+}
+
+/* animacion */
+@keyframes aparecer{
+from{
+opacity:0;
+transform:translateY(20px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+</style>
+</head>
+
+<body>
+
+<h1>🐱 Galería de Gatos</h1>
+
+<div id="estado">Cargando gatos...</div>
+
+<div class="controles">
+<input type="text" id="filtro" placeholder="🔍 Buscar por nombre o raza...">
+<button id="cargarMas">🐾 Cargar más gatos</button>
+</div>
+
+<section class="formulario">
+<h2>Agregar Gato</h2>
+<div>
+<input type="text" id="nombre" placeholder="Nombre del gato">
+<input type="text" id="raza" placeholder="Raza">
+<input type="text" id="imagen" placeholder="Link de imagen (opcional)">
+</div>
+<div>
+<button id="sugerir">🎲 Sugerir imagen</button>
+<button id="agregar">➕ Agregar gato</button>
+</div>
+</section>
+
+<section id="contenedorGatos"></section>
+
+<script>
+const contenedor = document.getElementById("contenedorGatos")
+const estado = document.getElementById("estado")
+const filtroInput = document.getElementById("filtro")
+
+let gatos = []
+let gatosFiltrados = []
+
+const API = "https://api.thecatapi.com/v1/images/search?limit=6"
+
+const nombresGatos = ["Luna", "Michi", "Pelusa", "Simba", "Nala", "Garfield", "Tom", "Felix", "Whiskers", "Shadow", "Milo", "Cleo"]
+const razasGatos = ["Persa", "Siamés", "Maine Coon", "Bengalí", "Ragdoll", "Británico", "Angora", "Siberiano", "Esfinge", "Abisinio"]
+
+async function obtenerGatos(){
+try{
+estado.textContent="Cargando..."
+const respuesta = await fetch(API)
+const datos = await respuesta.json()
+gatos = datos.map((g,i)=>({
+id:i,
+nombre:nombresGatos[Math.floor(Math.random() * nombresGatos.length)],
+raza:razasGatos[Math.floor(Math.random() * razasGatos.length)],
+imagen:g.url
+}))
+gatosFiltrados = gatos
+mostrarGatos()
+estado.textContent=""
+}catch(error){
+estado.textContent="Error al cargar gatos"
+console.error(error)
+}
+}
+
+function mostrarGatos(){
+contenedor.innerHTML=""
+gatosFiltrados.forEach(gato=>{
+const tarjeta=document.createElement("div")
+tarjeta.classList.add("tarjeta")
+tarjeta.innerHTML=`
+<img src="${gato.imagen}">
+<h3>${gato.nombre}</h3>
+<p>${gato.raza}</p>
+<div class="botones">
+<button onclick="editarGato(${gato.id})">Editar</button>
+<button onclick="eliminarGato(${gato.id})">Eliminar</button>
+</div>
+`
+tarjeta.addEventListener("mouseover",()=>{
+tarjeta.style.background="#f0f0f0"
+})
+tarjeta.addEventListener("mouseout",()=>{
+tarjeta.style.background="white"
+})
+tarjeta.addEventListener("dblclick",()=>{
+alert("Nombre: "+gato.nombre+"\nRaza: "+gato.raza)
+})
+contenedor.appendChild(tarjeta)
+})
+}
+
+document.getElementById("agregar").addEventListener("click",()=>{
+const nombre=document.getElementById("nombre").value
+const raza=document.getElementById("raza").value
+const imagen=document.getElementById("imagen").value
+const nuevo={
+id:Date.now(),
+nombre,
+raza,
+imagen
+}
+gatos.push(nuevo)
+gatosFiltrados = gatos
+mostrarGatos()
+})
+
+function eliminarGato(id){
+gatos = gatos.filter(g=>g.id!==id)
+gatosFiltrados = gatos
+mostrarGatos()
+}
+
+function editarGato(id){
+const gato = gatos.find(g=>g.id===id)
+const nuevoNombre = prompt("Nuevo nombre",gato.nombre)
+const nuevaRaza = prompt("Nueva raza",gato.raza)
+gato.nombre=nuevoNombre
+gato.raza=nuevaRaza
+filtrarGatos()
+}
+
+document.getElementById("sugerir").addEventListener("click",async()=>{
+try{
+const respuesta = await fetch("https://api.thecatapi.com/v1/images/search")
+const datos = await respuesta.json()
+document.getElementById("imagen").value = datos[0].url
+}catch(error){
+alert("Error obteniendo imagen")
+}
+})
+
+filtroInput.addEventListener("input", filtrarGatos)
+
+function filtrarGatos(){
+const texto = filtroInput.value.toLowerCase()
+gatosFiltrados = gatos.filter(g=>
+g.nombre.toLowerCase().includes(texto) ||
+g.raza.toLowerCase().includes(texto)
+)
+mostrarGatos()
+}
+
+document.getElementById("cargarMas").addEventListener("click", async()=>{
+try{
+estado.textContent="Cargando más gatos..."
+const respuesta = await fetch("https://api.thecatapi.com/v1/images/search?limit=3")
+const datos = await respuesta.json()
+const nuevosGatos = datos.map((g,i)=>({
+id:Date.now() + i,
+nombre:nombresGatos[Math.floor(Math.random() * nombresGatos.length)],
+raza:razasGatos[Math.floor(Math.random() * razasGatos.length)],
+imagen:g.url
+}))
+gatos = [...gatos, ...nuevosGatos]
+gatosFiltrados = gatos
+mostrarGatos()
+estado.textContent=""
+}catch(error){
+estado.textContent="Error al cargar más gatos"
+}
+})
+
+obtenerGatos()
+</script>
+
+</body>
+</html>
